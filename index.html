@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Suraj Verma — Coder & Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ===== LOADING SCREEN ===== */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: linear-gradient(135deg, #0a0a0a 0%, #0f1515 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 2rem;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Animated Logo */
+        .loading-logo {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+
+        .loading-logo svg {
+            width: 100%;
+            height: 100%;
+            animation: logoPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Loading Text */
+        .loading-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 2px;
+        }
+
+        .loading-text span {
+            color: #10b981;
+        }
+
+        /* Loading Dots */
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .loading-dots span {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: dotBounce 1.4s ease-in-out infinite;
+        }
+
+        .loading-dots span:nth-child(1) { animation-delay: 0s; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 2px;
+            animation: fillProgress 2s ease-out forwards;
+        }
+
+        @keyframes fillProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* ===== MAIN CONTENT (Hidden initially) ===== */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        /* Animated Background */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+
+        /* Grid Pattern Background */
+        .bg::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Coding Side Animation Elements */
+        .coding-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Editor Side Animation Elements */
+        .editor-animation {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Floating Code Lines */
+        .code-line {
+            position: absolute;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #10b981;
+            white-space: nowrap;
+            opacity: 0;
+            animation: floatCode 8s linear infinite;
+        }
+
+        @keyframes floatCode {
+            0% { transform: translateX(-100%); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Floating Brackets */
+        .bracket {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #10b981;
+            opacity: 0.3;
+            animation: floatBracket 6s ease-in-out infinite;
+        }
+
+        @keyframes floatBracket {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.2; }
+            50% { transform: translateY(-20px) rotate(5deg); opacity: 0.5; }
+        }
+
+        /* Cursor Blink */
+        .cursor-blink {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: #10b981;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Editor Side - Music Wave */
+        .music-wave-editor {
+            position: absolute;
+            bottom: 20%;
+            left: 20%;
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        .music-wave-editor span {
+            width: 3px;
+            background: #10b981;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+        .music-wave-editor span:nth-child(1) { height: 15px; animation-delay: 0s; }
+        .music-wave-editor span:nth-child(2) { height: 25px; animation-delay: 0.1s; }
+        .music-wave-editor span:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+        .music-wave-editor span:nth-child(4) { height: 35px; animation-delay: 0.3s; }
+        .music-wave-editor span:nth-child(5) { height: 22px; animation-delay: 0.4s; }
+        .music-wave-editor span:nth-child(6) { height: 30px; animation-delay: 0.5s; }
+        .music-wave-editor span:nth-child(7) { height: 18px; animation-delay: 0.6s; }
+
+        @keyframes wave {
+            0%, 100% { height: 15px; }
+            50% { height: 35px; }
+        }
+
+        /* Editor Side - Scissor Animation */
+        .scissor-animation {
+            position: absolute;
+            bottom: 30%;
+            right: 15%;
+            font-size: 1.5rem;
+            color: #10b981;
+            animation: cutMove 4s ease-in-out infinite;
+        }
+
+        @keyframes cutMove {
+            0%, 100% { transform: rotate(0deg) translate(0, 0); opacity: 0.4; }
+            50% { transform: rotate(20deg) translate(10px, -10px); opacity: 0.8; }
+        }
+
+        /* Editor Side - Floating Icons */
+        .floating-icon {
+            position: absolute;
+            font-size: 1.2rem;
+            color: #10b981;
+            opacity: 0.4;
+            animation: floatIcon 8s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+            50% { transform: translate(15px, -15px); opacity: 0.7; }
+        }
+
+        /* Center Divider */
+        .divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, #10b981, #10b981, transparent);
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Cards */
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .card {
+            flex: 1;
+            min-width: 280px;
+            max-width: 420px;
+            background: rgba(17, 17, 17, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 28px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            border-color: #10b981;
+            box-shadow: 0 30px 50px rgba(16, 185, 129, 0.2);
+            background: rgba(17, 17, 17, 0.95);
+        }
+
+        .card-icon {
+            width: 90px;
+            height: 90px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            background: rgba(16, 185, 129, 0.2);
+            transform: scale(1.05);
+        }
+
+        .card.coder .card-icon { color: #10b981; }
+        .card.editor .card-icon { color: #10b981; }
+
+        .card h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+
+        .card p {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .card .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50px;
+            color: #10b981;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .card:hover .btn {
+            background: #10b981;
+            color: #0a0a0a;
+            border-color: #10b981;
+        }
+
+        /* Features List */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .features span {
+            font-size: 0.7rem;
+            color: #6b7280;
+            background: rgba(255,255,255,0.05);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        /* Header */
+        .main-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .main-header h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .main-header .highlight {
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-header p {
+            color: #9ca3af;
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #6b7280;
+            font-size: 0.7rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .coding-animation, .editor-animation { display: none; }
+            .divider { display: none; }
+            .cards { gap: 1.2rem; }
+            .card { padding: 1.8rem; }
+            .card-icon { width: 70px; height: 70px; font-size: 2rem; }
+            .card h2 { font-size: 1.4rem; }
+            .container { padding: 1.5rem; }
+            .main-header { margin-bottom: 2rem; }
+        }
+
+        /* Small Animation Elements - Coding Side */
+        .code-snippet {
+            position: absolute;
+            top: 15%;
+            left: 10%;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            color: #10b981;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        .code-snippet2 {
+            position: absolute;
+            bottom: 20%;
+            left: 15%;
+            font-family: 'Courier New', monospace;
+            font-size: 0.65rem;
+            color: #34d399;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 8px;
+            animation: glowPulse 3.5s ease-in-out infinite reverse;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; box-shadow: 0 0 5px rgba(16,185,129,0.1); }
+            50% { opacity: 0.8; box-shadow: 0 0 15px rgba(16,185,129,0.3); }
+        }
+
+        /* Editor Side - Film Strip */
+        .film-strip {
+            position: absolute;
+            top: 10%;
+            right: 5%;
+            width: 60px;
+            height: 80px;
+            background: repeating-linear-gradient(0deg, #10b981, #10b981 5px, transparent 5px, transparent 15px);
+            border-radius: 5px;
+            opacity: 0.3;
+            animation: filmMove 4s linear infinite;
+        }
+
+        @keyframes filmMove {
+            0% { transform: translateY(0); opacity: 0.2; }
+            50% { transform: translateY(10px); opacity: 0.5; }
+            100% { transform: translateY(0); opacity: 0.2; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOADING SCREEN ===== -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="20" width="60" height="60" rx="12" fill="url(#grad)" stroke="#10b981" stroke-width="2"/>
+                <path d="M40 45 L60 45 M45 35 L55 35 M45 55 L55 55" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="4" fill="#10b981"/>
+                <defs>
+                    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#10b981"/>
+                        <stop offset="100%" stop-color="#34d399"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        <div class="loading-text">Suraj <span>Verma</span></div>
+        <div class="loading-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content" id="mainContent">
+        <div class="bg"></div>
+
+        <!-- Coding Side Animation (Left) -->
+        <div class="coding-animation">
+            <div class="code-line" style="top: 20%; left: -50px; animation-duration: 6s;">&lt;html&gt;</div>
+            <div class="code-line" style="top: 35%; left: -50px; animation-duration: 8s; animation-delay: 1s;">&lt;div class="container"&gt;</div>
+            <div class="code-line" style="top: 50%; left: -50px; animation-duration: 7s; animation-delay: 2s;">&lt;h1&gt;Hello World!&lt;/h1&gt;</div>
+            <div class="code-line" style="top: 65%; left: -50px; animation-duration: 9s; animation-delay: 0.5s;">&lt;button onClick="..."&gt;Click Me&lt;/button&gt;</div>
+            <div class="code-line" style="top: 80%; left: -50px; animation-duration: 5s; animation-delay: 3s;">&lt;/div&gt;</div>
+            <div class="code-line" style="top: 25%; left: 20%; animation-duration: 10s; animation-delay: 1.5s;">const app = new React();</div>
+            <div class="code-line" style="top: 45%; left: 30%; animation-duration: 7s; animation-delay: 2.5s;">npm start</div>
+            
+            <div class="bracket" style="top: 15%; left: 5%;">{ }</div>
+            <div class="bracket" style="top: 60%; left: 8%;">[ ]</div>
+            <div class="bracket" style="top: 75%; right: 10%;">( )</div>
+            
+            <div class="cursor-blink" style="top: 30%; left: 15%;"></div>
+            <div class="cursor-blink" style="top: 55%; left: 25%; animation-delay: 0.5s;"></div>
+            
+            <div class="code-snippet">
+                <i class="fas fa-code"></i> import React from 'react'
+            </div>
+            <div class="code-snippet2">
+                <i class="fas fa-terminal"></i> $ git commit -m "init"
+            </div>
+        </div>
+
+        <!-- Editor Side Animation (Right) -->
+        <div class="editor-animation">
+            <div class="music-wave-editor">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            
+            <div class="scissor-animation">
+                <i class="fas fa-cut"></i>
+            </div>
+            
+            <div class="floating-icon" style="top: 15%; right: 20%; animation-delay: 0s;"><i class="fas fa-film"></i></div>
+            <div class="floating-icon" style="top: 40%; right: 10%; animation-delay: 1s;"><i class="fas fa-music"></i></div>
+            <div class="floating-icon" style="top: 60%; right: 25%; animation-delay: 2s;"><i class="fas fa-video"></i></div>
+            <div class="floating-icon" style="top: 75%; right: 15%; animation-delay: 0.5s;"><i class="fas fa-scissors"></i></div>
+            <div class="floating-icon" style="top: 25%; right: 35%; animation-delay: 1.5s;"><i class="fas fa-crop-alt"></i></div>
+            <div class="floating-icon" style="top: 80%; right: 40%; animation-delay: 2.5s;"><i class="fas fa-sliders-h"></i></div>
+            
+            <div class="film-strip"></div>
+            
+            <div class="code-snippet" style="top: 70%; right: 8%; left: auto; background: rgba(0,0,0,0.3);">
+                <i class="fas fa-play"></i> Timeline Ready
+            </div>
+            <div class="code-snippet2" style="top: 85%; right: 20%; left: auto;">
+                <i class="fas fa-magic"></i> VFX + Transitions
+            </div>
+        </div>
+
+        <!-- Center Divider -->
+        <div class="divider"></div>
+
+        <div class="container">
+            <div>
+                <div class="main-header">
+                    <h1>Suraj <span class="highlight">Verma</span></h1>
+                    <p>Choose your path to explore my work</p>
+                </div>
+                
+                <div class="cards">
+                    <!-- Coder Card -->
+                    <a href="coder/index.html" class="card coder">
+                        <div class="card-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h2>Coder Portfolio</h2>
+                        <p>Web development, programming projects, technical skills, and coding journey.</p>
+                        <div class="features">
+                            <span><i class="fab fa-react"></i> React</span>
+                            <span><i class="fab fa-python"></i> Python</span>
+                            <span><i class="fas fa-database"></i> MongoDB</span>
+                        </div>
+                        <div class="btn">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </a>
+
+                    <!-- Editor Card -->
+                    <a href="editor/index.html" class="card editor">
+                        <div class="card-icon">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <h2>Editor Portfolio</h2>
+                        <p>Video editing, cinematic masterpieces, smooth transitions, and creative content.</p>
+                        <div class="features">
+                            <span><i class="fab fa-adobe"></i> Premiere Pro</span>
+                            <span><i class="fas fa-cut"></i> CapCut</span>
+                            <span><i class="fas fa-music"></i> DaVinci</span>
+                        </div>
+                        <div class="btn">
+                            Explore <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="footer">
+                    <p>© 2026 Suraj Verma | Choose your interest | <i class="fas fa-code"></i> Coder | <i class="fas fa-film"></i> Editor</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Loading Screen - 2 seconds then fade out
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const mainContent = document.getElementById('mainContent');
+            
+            // After 2 seconds, hide loading screen and show main content
+            setTimeout(() => {
+                loadingScreen.classList.add('hide');
+                mainContent.classList.add('visible');
+                
+                // Remove loading screen from DOM after animation
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
